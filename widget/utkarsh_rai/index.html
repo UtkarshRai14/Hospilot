@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CarePlus Hospital — HIS</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; color: #1e293b; display: flex; height: 100vh; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    aside {
+      width: 220px; flex-shrink: 0; background: #fff; border-right: 1px solid #e2e8f0;
+      display: flex; flex-direction: column;
+    }
+    .sidebar-brand {
+      padding: 18px 20px; display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .brand-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: linear-gradient(135deg, #6366f1, #3b82f6);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 15px; flex-shrink: 0;
+    }
+    .brand-name { font-size: 14px; font-weight: 700; color: #0f172a; }
+    .brand-sub  { font-size: 10px; color: #94a3b8; }
+
+    nav { padding: 12px 10px; flex: 1; }
+    .nav-item {
+      padding: 8px 12px; border-radius: 8px; font-size: 13px; cursor: pointer;
+      display: flex; align-items: center; gap: 10px; color: #64748b;
+      transition: background 0.15s, color 0.15s; margin-bottom: 2px;
+    }
+    .nav-item:hover  { background: #f8fafc; color: #1e293b; }
+    .nav-item.active { background: #eff6ff; color: #3b82f6; font-weight: 500; }
+    .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+
+    .sidebar-footer { padding: 16px; border-top: 1px solid #e2e8f0; }
+    .user-row { display: flex; align-items: center; gap: 10px; }
+    .user-avatar {
+      width: 34px; height: 34px; border-radius: 50%; background: #eff6ff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600; color: #3b82f6; flex-shrink: 0;
+    }
+    .user-name { font-size: 13px; font-weight: 500; color: #0f172a; }
+    .user-role { font-size: 11px; color: #94a3b8; }
+
+    /* ── Main ── */
+    main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+    .topbar {
+      background: #fff; border-bottom: 1px solid #e2e8f0;
+      padding: 14px 28px; display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .page-title { font-size: 18px; font-weight: 700; color: #0f172a; }
+    .page-sub   { font-size: 13px; color: #94a3b8; margin-top: 1px; }
+    .topbar-actions { display: flex; align-items: center; gap: 12px; }
+    .search-bar {
+      padding: 8px 14px; border-radius: 8px; border: 1px solid #e2e8f0;
+      background: #f8fafc; color: #1e293b; font-size: 13px; width: 260px; outline: none;
+    }
+    .icon-action {
+      width: 36px; height: 36px; border-radius: 8px; border: 1px solid #e2e8f0;
+      background: #fff; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #64748b; font-size: 16px; transition: background 0.15s;
+    }
+    .icon-action:hover { background: #f8fafc; }
+
+    .content { padding: 28px; flex: 1; }
+
+    /* ── Stats row ── */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card {
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;
+    }
+    .stat-label  { font-size: 12px; color: #94a3b8; font-weight: 500; margin-bottom: 8px; }
+    .stat-value  { font-size: 26px; font-weight: 700; color: #0f172a; }
+    .stat-delta  { font-size: 12px; margin-top: 4px; }
+    .delta-up   { color: #22c55e; }
+    .delta-down { color: #ef4444; }
+
+    /* ── Content grid ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .card {
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;
+    }
+    .card-title { font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 16px; }
+    .card-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px;
+    }
+    .card-row:last-child { border-bottom: none; }
+    .card-label { color: #64748b; }
+    .card-val   { font-weight: 600; color: #0f172a; }
+
+    /* OT table */
+    .ot-row { display: grid; grid-template-columns: 80px 1fr 100px 100px; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+    .ot-row:last-child { border-bottom: none; }
+    .ot-room { font-weight: 600; color: #0f172a; }
+    .ot-case { color: #64748b; }
+    .ot-status { padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 600; text-align: center; }
+    .ot-active  { background: #dcfce7; color: #16a34a; }
+    .ot-waiting { background: #fef9c3; color: #ca8a04; }
+    .ot-done    { background: #f1f5f9; color: #64748b; }
+
+    .badge-count {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 50%;
+      font-size: 11px; font-weight: 700;
+    }
+    .badge-red  { background: #fee2e2; color: #ef4444; }
+    .badge-green { background: #dcfce7; color: #16a34a; }
+    .badge-blue { background: #dbeafe; color: #3b82f6; }
+
+    /* ── Responsive ─────────────────────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .search-bar { width: 200px; }
+      .content { padding: 20px; }
+    }
+
+    @media (max-width: 768px) {
+      body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; }
+      aside {
+        width: 100%; flex-direction: row; align-items: center; flex-wrap: wrap;
+        border-right: none; border-bottom: 1px solid #e2e8f0;
+      }
+      .sidebar-brand { order: 1; border-bottom: none; }
+      .sidebar-footer { order: 2; margin-left: auto; border-top: none; }
+      nav { order: 3; flex: 1 1 100%; display: flex; gap: 4px; padding: 8px 12px; overflow-x: auto; }
+      .nav-item { margin-bottom: 0; white-space: nowrap; }
+      main { overflow-y: visible; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .topbar { padding: 14px 16px; }
+      .content { padding: 16px; }
+    }
+
+    @media (max-width: 560px) {
+      .stats-row { grid-template-columns: 1fr; gap: 12px; }
+      .topbar { flex-direction: column; align-items: stretch; gap: 10px; }
+      .topbar-actions { width: 100%; }
+      .search-bar { flex: 1; width: auto; }
+      .stat-card { padding: 16px; }
+      .stat-value { font-size: 22px; }
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       HOSPILOT WIDGET STYLES
+       ══════════════════════════════════════════════════════════════════════ */
+
+    /* Floating trigger button */
+    #hospilot-trigger {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #6366f1, #3b82f6);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.45);
+      transition: transform 0.2s, box-shadow 0.2s;
+      z-index: 1000;
+    }
+    #hospilot-trigger:hover {
+      transform: scale(1.07);
+      box-shadow: 0 6px 28px rgba(99, 102, 241, 0.55);
+    }
+    #hospilot-trigger svg { width: 26px; height: 26px; fill: white; }
+
+    /* Widget panel */
+    #hospilot-panel {
+      position: fixed;
+      bottom: 96px;
+      right: 28px;
+      width: 380px;
+      max-height: 560px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      box-shadow: 0 12px 48px rgba(15, 23, 42, 0.14);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 1000;
+      animation: slideUp 0.2s ease-out;
+    }
+    #hospilot-panel.open { display: flex; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .widget-header {
+      padding: 16px 18px;
+      background: linear-gradient(135deg, #6366f1, #3b82f6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .widget-header-left { display: flex; align-items: center; gap: 10px; }
+    .widget-logo {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 14px; font-weight: 700;
+    }
+    .widget-title { color: white; font-size: 14px; font-weight: 700; }
+    .widget-subtitle { color: rgba(255,255,255,0.75); font-size: 11px; margin-top: 1px; }
+    .widget-close {
+      width: 28px; height: 28px; border-radius: 8px; border: none;
+      background: rgba(255,255,255,0.15); color: white; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; transition: background 0.15s;
+    }
+    .widget-close:hover { background: rgba(255,255,255,0.25); }
+
+    .widget-body {
+      padding: 20px 18px;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .widget-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    #hospilot-goal {
+      width: 100%;
+      padding: 10px 13px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #1e293b;
+      resize: none;
+      outline: none;
+      font-family: inherit;
+      line-height: 1.5;
+      transition: border-color 0.15s;
+      min-height: 80px;
+    }
+    #hospilot-goal:focus { border-color: #6366f1; }
+    #hospilot-goal::placeholder { color: #94a3b8; }
+
+    #hospilot-submit {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #3b82f6);
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    #hospilot-submit:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+    #hospilot-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* Status area */
+    #hospilot-status {
+      display: none;
+      font-size: 13px;
+      color: #64748b;
+      align-items: center;
+      gap: 8px;
+    }
+    #hospilot-status.visible { display: flex; }
+
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid #e2e8f0;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error area */
+    #hospilot-error {
+      display: none;
+      padding: 10px 13px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      font-size: 12px;
+      color: #dc2626;
+    }
+    #hospilot-error.visible { display: block; }
+
+    /* View Plan button */
+    #hospilot-view-plan {
+      display: none;
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background: #0f172a;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    #hospilot-view-plan.visible { display: flex; }
+    #hospilot-view-plan:hover { opacity: 0.88; }
+
+    /* Success badge */
+    #hospilot-success-badge {
+      display: none;
+      padding: 8px 12px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 10px;
+      font-size: 12px;
+      color: #16a34a;
+      align-items: center;
+      gap: 6px;
+    }
+    #hospilot-success-badge.visible { display: flex; }
+
+    /* ── Iframe overlay ── */
+    #hospilot-iframe-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+    #hospilot-iframe-overlay.open { display: flex; }
+
+    .iframe-container {
+      width: 90vw;
+      height: 90vh;
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 80px rgba(15, 23, 42, 0.3);
+      position: relative;
+    }
+
+    .iframe-toolbar {
+      padding: 10px 16px;
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .iframe-title { font-size: 13px; font-weight: 600; color: #0f172a; }
+    .iframe-close {
+      padding: 6px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fff;
+      font-size: 12px;
+      color: #64748b;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .iframe-close:hover { background: #f8fafc; }
+
+    .iframe-loading-bar {
+      height: 3px;
+      background: linear-gradient(90deg, #6366f1, #3b82f6);
+      flex-shrink: 0;
+      display: none;
+    }
+    .iframe-loading-bar.visible { display: block; animation: loadbar 1.5s ease-in-out infinite; }
+    @keyframes loadbar {
+      0%   { width: 0%; margin-left: 0; }
+      50%  { width: 70%; margin-left: 15%; }
+      100% { width: 0%; margin-left: 100%; }
+    }
+
+    #hospilot-frame {
+      flex: 1;
+      border: none;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside>
+    <div class="sidebar-brand">
+      <div class="brand-icon">+</div>
+      <div>
+        <div class="brand-name">CarePlus</div>
+        <div class="brand-sub">Hospital HIS</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-item active"><span class="nav-icon">📊</span> Dashboard</div>
+      <div class="nav-item"><span class="nav-icon">🏥</span> IPD</div>
+      <div class="nav-item"><span class="nav-icon">🩺</span> OPD</div>
+      <div class="nav-item"><span class="nav-icon">🚨</span> ER</div>
+      <div class="nav-item"><span class="nav-icon">🛏</span> Bed Management</div>
+      <div class="nav-item"><span class="nav-icon">🔬</span> Lab</div>
+      <div class="nav-item"><span class="nav-icon">💊</span> Pharmacy</div>
+      <div class="nav-item"><span class="nav-icon">💰</span> Billing</div>
+      <div class="nav-item"><span class="nav-icon">📁</span> Reports</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="user-avatar">N</div>
+        <div>
+          <div class="user-name">Dr. Neha Sharma</div>
+          <div class="user-role">Administrator</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main>
+    <div class="topbar">
+      <div>
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub">Overview of hospital operations</div>
+      </div>
+      <div class="topbar-actions">
+        <input class="search-bar" placeholder="Search patients, menus, transactions…">
+        <div class="icon-action">🔔</div>
+        <div class="icon-action">❓</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Today's Admissions</div>
+          <div class="stat-value">76</div>
+          <div class="stat-delta delta-up">↑ 12% vs yesterday</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Occupancy</div>
+          <div class="stat-value">82%</div>
+          <div class="stat-delta delta-up">↑ 5% vs yesterday</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Beds</div>
+          <div class="stat-value">350</div>
+          <div class="stat-delta" style="color:#94a3b8">287 Occupied · 48 Vacant · 15 Blocked</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">ER Wait (avg)</div>
+          <div class="stat-value">34m</div>
+          <div class="stat-delta delta-down">↑ 8m vs yesterday</div>
+        </div>
+      </div>
+
+      <!-- Content grid -->
+      <div class="grid-2">
+        <!-- Bed Overview -->
+        <div class="card">
+          <div class="card-title">Bed Overview by Unit</div>
+          <div class="card-row"><span class="card-label">ICU</span><span class="card-val">18 / 24 <span class="badge-count badge-red">6</span></span></div>
+          <div class="card-row"><span class="card-label">General Ward</span><span class="card-val">142 / 180 <span class="badge-count badge-green">38</span></span></div>
+          <div class="card-row"><span class="card-label">Private</span><span class="card-val">68 / 80 <span class="badge-count badge-blue">12</span></span></div>
+          <div class="card-row"><span class="card-label">Emergency</span><span class="card-val">24 / 30 <span class="badge-count badge-red">6</span></span></div>
+          <div class="card-row"><span class="card-label">Paediatric</span><span class="card-val">35 / 36 <span class="badge-count badge-red">1</span></span></div>
+        </div>
+
+        <!-- OT Overview -->
+        <div class="card">
+          <div class="card-title">OT Overview — Today</div>
+          <div class="ot-row" style="color:#94a3b8;font-size:11px;font-weight:600;padding-bottom:6px;">
+            <span>ROOM</span><span>CASE</span><span>STATUS</span><span>TIME</span>
+          </div>
+          <div class="ot-row">
+            <span class="ot-room">OT 1</span>
+            <span class="ot-case">Appendectomy — Dr. Arjun</span>
+            <span class="ot-status ot-active">In Progress</span>
+            <span style="color:#64748b">2:00 PM</span>
+          </div>
+          <div class="ot-row">
+            <span class="ot-room">OT 2</span>
+            <span class="ot-case">Knee Replacement — Dr. Meera</span>
+            <span class="ot-status ot-waiting">Prep</span>
+            <span style="color:#64748b">3:30 PM</span>
+          </div>
+          <div class="ot-row">
+            <span class="ot-room">OT 3</span>
+            <span class="ot-case">Cataract — Dr. Priya</span>
+            <span class="ot-status ot-done">Completed</span>
+            <span style="color:#64748b">12:00 PM</span>
+          </div>
+          <div class="ot-row">
+            <span class="ot-room">OT 4</span>
+            <span class="ot-case">Cholecystectomy — Dr. Rahul</span>
+            <span class="ot-status ot-waiting">Scheduled</span>
+            <span style="color:#64748b">5:00 PM</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       HOSPILOT WIDGET
+       ══════════════════════════════════════════════════════════════════════ -->
+
+  <!-- Floating trigger button -->
+  <button id="hospilot-trigger" title="Open Hospilot" aria-label="Open Hospilot AI assistant">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+    </svg>
+  </button>
+
+  <!-- Widget panel -->
+  <div id="hospilot-panel" role="dialog" aria-label="Hospilot AI assistant">
+    <div class="widget-header">
+      <div class="widget-header-left">
+        <div class="widget-logo">H</div>
+        <div>
+          <div class="widget-title">Hospilot</div>
+          <div class="widget-subtitle">AI-coordinated workflows</div>
+        </div>
+      </div>
+      <button class="widget-close" id="hospilot-close" aria-label="Close Hospilot">✕</button>
+    </div>
+
+    <div class="widget-body">
+      <div>
+        <div class="widget-label">Describe your goal</div>
+      </div>
+
+      <textarea
+        id="hospilot-goal"
+        placeholder="e.g. Check ICU bed capacity for tonight, help plan staffing for ED surge…"
+        rows="4"
+        maxlength="500"
+      ></textarea>
+
+      <button id="hospilot-submit">Create Plan →</button>
+
+      <!-- Status: loading -->
+      <div id="hospilot-status">
+        <div class="spinner"></div>
+        <span id="hospilot-status-text">Creating session…</span>
+      </div>
+
+      <!-- Error -->
+      <div id="hospilot-error" role="alert"></div>
+
+      <!-- Success badge -->
+      <div id="hospilot-success-badge">
+        <span>✅</span>
+        <span>Plan ready!</span>
+      </div>
+
+      <!-- View Plan button — only shown when pipeline is ready -->
+      <button id="hospilot-view-plan">
+        <span>🔍</span> View Plan
+      </button>
+    </div>
+  </div>
+
+  <!-- Iframe overlay — full-screen Hospilot dashboard -->
+  <div id="hospilot-iframe-overlay">
+    <div class="iframe-container">
+      <div class="iframe-toolbar">
+        <span class="iframe-title">Hospilot — Mission Plan</span>
+        <button class="iframe-close" id="hospilot-iframe-close">✕ Close</button>
+      </div>
+      <div class="iframe-loading-bar" id="iframe-loading-bar"></div>
+      <iframe
+        id="hospilot-frame"
+        src="about:blank"
+        title="Hospilot dashboard"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+      ></iframe>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * Hospilot Widget — utkarsh_rai assessment submission
+     *
+     * All Hospilot API calls go through our local backend (/api/*).
+     * The browser never contacts hospilot.carer.ai directly.
+     *
+     * Flow:
+     *   1. User enters goal → POST /api/create-session
+     *   2. Backend logs in + creates session → returns { sessionId, token }
+     *   3. Widget polls GET /api/poll-session?sessionId=…&token=…
+     *      every 3 s until pipeline is non-empty (or 120 s timeout)
+     *   4. "View Plan" button becomes available
+     *   5. Click → show iframe src=https://hospilot.carer.ai
+     *   6. Wait for iframe load event → postMessage(widget_init, …)
+     */
+    (function () {
+      'use strict';
+
+      // ── State ────────────────────────────────────────────────────────────────
+      let _sessionId   = null;
+      let _token       = null;
+      let _pollTimer   = null;
+      let _pollElapsed = 0;
+
+      const POLL_INTERVAL_MS = 3000;   // poll every 3 s
+      const POLL_TIMEOUT_MS  = 120000; // give up after 2 min
+
+      // ── Elements ─────────────────────────────────────────────────────────────
+      const trigger       = document.getElementById('hospilot-trigger');
+      const panel         = document.getElementById('hospilot-panel');
+      const closeBtn      = document.getElementById('hospilot-close');
+      const goalInput     = document.getElementById('hospilot-goal');
+      const submitBtn     = document.getElementById('hospilot-submit');
+      const statusEl      = document.getElementById('hospilot-status');
+      const statusText    = document.getElementById('hospilot-status-text');
+      const errorEl       = document.getElementById('hospilot-error');
+      const successBadge  = document.getElementById('hospilot-success-badge');
+      const viewPlanBtn   = document.getElementById('hospilot-view-plan');
+      const overlay       = document.getElementById('hospilot-iframe-overlay');
+      const iframeEl      = document.getElementById('hospilot-frame');
+      const loadingBar    = document.getElementById('iframe-loading-bar');
+      const iframeClose   = document.getElementById('hospilot-iframe-close');
+
+      // ── UI helpers ───────────────────────────────────────────────────────────
+      function showError(msg) {
+        errorEl.textContent = msg;
+        errorEl.classList.add('visible');
+      }
+
+      function clearError() {
+        errorEl.classList.remove('visible');
+        errorEl.textContent = '';
+      }
+
+      function setStatus(msg) {
+        statusText.textContent = msg;
+        statusEl.classList.add('visible');
+      }
+
+      function hideStatus() {
+        statusEl.classList.remove('visible');
+      }
+
+      function resetWidget() {
+        clearError();
+        hideStatus();
+        successBadge.classList.remove('visible');
+        viewPlanBtn.classList.remove('visible');
+        submitBtn.disabled = false;
+        goalInput.disabled = false;
+        if (_pollTimer) { clearTimeout(_pollTimer); _pollTimer = null; }
+        _sessionId = null;
+        _token     = null;
+        _pollElapsed = 0;
+      }
+
+      // ── Toggle panel ─────────────────────────────────────────────────────────
+      trigger.addEventListener('click', () => {
+        panel.classList.toggle('open');
+        if (panel.classList.contains('open')) goalInput.focus();
+      });
+
+      closeBtn.addEventListener('click', () => panel.classList.remove('open'));
+
+      // ── Submit goal ──────────────────────────────────────────────────────────
+            // API helper: try same-origin first, fall back to http://localhost:3001 if needed
+      const API_FALLBACK = 'http://localhost:3001';
+      async function apiFetch(path, options) {
+        // If path already absolute, use as-is
+        const isAbsolute = /^https?:\/\//i.test(path);
+        const tryPaths = isAbsolute ? [path] : [path, API_FALLBACK + path];
+        let lastError;
+        for (const p of tryPaths) {
+          try {
+            const res = await fetch(p, options);
+            // If successful (2xx), return it
+            if (res && res.ok) return res;
+            // If non-OK but JSON, still return so caller can handle status codes
+            const ct = res && res.headers ? res.headers.get('content-type') : '';
+            if (ct && ct.indexOf('application/json') !== -1) return res;
+            lastError = new Error(`Non-JSON or error response from ${p}`);
+          } catch (e) {
+            lastError = e;
+          }
+        }
+        throw lastError || new Error('apiFetch failed');
+      }
+submitBtn.addEventListener('click', handleSubmit);
+
+      goalInput.addEventListener('keydown', e => {
+        // Ctrl+Enter or Cmd+Enter submits
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleSubmit();
+      });
+
+      async function handleSubmit() {
+        const goal = goalInput.value.trim();
+        if (!goal) {
+          showError('Please enter a goal before submitting.');
+          goalInput.focus();
+          return;
+        }
+
+        resetWidget();
+        submitBtn.disabled   = true;
+        goalInput.disabled   = true;
+        setStatus('Creating session…');
+
+        let response;
+        try {
+          response = await fetch('/api/create-session', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ goal }),
+          });
+        } catch (networkErr) {
+          submitBtn.disabled = false;
+          goalInput.disabled = false;
+          hideStatus();
+          showError('Cannot reach the local backend. Is server.js running?');
+          return;
+        }
+
+        let data;
+        try {
+          data = await response.json();
+        } catch {
+          submitBtn.disabled = false;
+          goalInput.disabled = false;
+          hideStatus();
+          showError('Unexpected response from backend.');
+          return;
+        }
+
+        if (!response.ok || data.error) {
+          submitBtn.disabled = false;
+          goalInput.disabled = false;
+          hideStatus();
+          showError(data.error || `Backend error (${response.status})`);
+          return;
+        }
+
+        _sessionId = data.sessionId;
+        _token     = data.token;
+
+        setStatus('Planning in progress… this takes 10–30 s');
+        startPolling();
+      }
+
+      // ── Polling ──────────────────────────────────────────────────────────────
+      function startPolling() {
+        _pollElapsed = 0;
+        schedulePoll();
+      }
+
+      function schedulePoll() {
+        _pollTimer = setTimeout(doPoll, POLL_INTERVAL_MS);
+      }
+
+      async function doPoll() {
+        _pollElapsed += POLL_INTERVAL_MS;
+        if (_pollElapsed >= POLL_TIMEOUT_MS) {
+          hideStatus();
+          submitBtn.disabled = false;
+          goalInput.disabled = false;
+          showError('Timed out waiting for the plan. Please try again.');
+          return;
+        }
+
+        let response;
+        try {
+          const qs = new URLSearchParams({ sessionId: _sessionId, token: _token });
+          response = await fetch(`/api/poll-session?${qs}`);
+        } catch {
+          // Network hiccup — retry
+          schedulePoll();
+          return;
+        }
+
+        if (!response.ok) {
+          // Backend error — retry (up to timeout)
+          schedulePoll();
+          return;
+        }
+
+        let data;
+        try {
+          data = await response.json();
+        } catch {
+          schedulePoll();
+          return;
+        }
+
+        // pipeline becomes non-empty once planning completes
+        const pipelineReady = data.pipeline && (
+          (Array.isArray(data.pipeline) && data.pipeline.length > 0) ||
+          (typeof data.pipeline === 'object' && Object.keys(data.pipeline).length > 0) ||
+          (typeof data.pipeline === 'string' && data.pipeline.trim().length > 0)
+        );
+
+        if (pipelineReady) {
+          // Plan is ready
+          clearTimeout(_pollTimer);
+          _pollTimer = null;
+          hideStatus();
+          successBadge.classList.add('visible');
+          viewPlanBtn.classList.add('visible');
+        } else {
+          // Still planning — update status with elapsed time
+          const secs = Math.round(_pollElapsed / 1000);
+          setStatus(`Planning in progress… (${secs}s)`);
+          schedulePoll();
+        }
+      }
+
+      // ── View Plan / iframe ───────────────────────────────────────────────────
+      viewPlanBtn.addEventListener('click', openIframe);
+
+      function openIframe() {
+        overlay.classList.add('open');
+        loadingBar.classList.add('visible');
+
+        // Set src to the real Hospilot app
+        iframeEl.src = 'https://hospilot.carer.ai';
+
+        // Wait for iframe to finish loading, then send widget_init
+        iframeEl.onload = function () {
+          loadingBar.classList.remove('visible');
+
+          // Exact message contract specified in the assessment
+          iframeEl.contentWindow.postMessage(
+            {
+              type:      'widget_init',
+              token:     _token,
+              sessionId: _sessionId,
+            },
+            '*'
+          );
+        };
+      }
+
+      iframeClose.addEventListener('click', () => {
+        overlay.classList.remove('open');
+        // Reset iframe src to stop the page
+        iframeEl.onload = null;
+        iframeEl.src    = 'about:blank';
+        loadingBar.classList.remove('visible');
+      });
+
+      // Close overlay on backdrop click
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay) {
+          overlay.classList.remove('open');
+          iframeEl.onload = null;
+          iframeEl.src    = 'about:blank';
+          loadingBar.classList.remove('visible');
+        }
+      });
+
+    })();
+  </script>
+
+</body>
+</html>
+

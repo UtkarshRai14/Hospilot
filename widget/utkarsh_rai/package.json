@@ -1,0 +1,13 @@
+{
+  "name": "hospilot-widget-utkarsh-rai",
+  "version": "1.0.0",
+  "description": "Hospilot widget backend – utkarsh_rai assessment submission",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
